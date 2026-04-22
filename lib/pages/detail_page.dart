@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
-import '../models/note.dart';
+import 'package:provider/provider.dart';
+import '../services/note_service.dart';
 import 'create_page.dart';
 
 class DetailPage extends StatelessWidget {
-  final Note note;
+  final String noteId;
 
-  const DetailPage({super.key, required this.note});
+  const DetailPage({super.key, required this.noteId});
 
   @override
   Widget build(BuildContext context) {
+    final note = context.watch<NoteService>().getNoteById(noteId);
+
+    if (note == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Détail Note')),
+        body: const Center(child: Text('Note introuvable')),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Détail Note'),
@@ -16,22 +26,18 @@ class DetailPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () async {
-              final updatedNote = await Navigator.push<Note>(
+            onPressed: () {
+              Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => CreateNotePage(note: note),
                 ),
               );
-              if (context.mounted && updatedNote != null) {
-                // Return the updated note to HomePage
-                Navigator.pop(context, updatedNote);
-              }
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteDialog(context),
+            onPressed: () => _showDeleteDialog(context, note.id),
           ),
         ],
       ),
@@ -57,7 +63,7 @@ class DetailPage extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
+  void _showDeleteDialog(BuildContext context, String noteId) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -70,8 +76,9 @@ class DetailPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
+              context.read<NoteService>().deleteNote(noteId);
               Navigator.pop(ctx); // Close dialog
-              Navigator.pop(context, 'deleted'); // Return 'deleted' to HomePage
+              Navigator.pop(context); // Close DetailPage
             },
             child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),

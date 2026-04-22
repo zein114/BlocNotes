@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/note_service.dart';
 import '../models/note.dart';
 
 class CreateNotePage extends StatefulWidget {
@@ -58,7 +60,13 @@ class _CreateNotePageState extends State<CreateNotePage> {
       dateModification: widget.note != null ? DateTime.now() : null,
     );
 
-    Navigator.pop(context, newNote);
+    if (widget.note != null) {
+      context.read<NoteService>().updateNote(newNote);
+    } else {
+      context.read<NoteService>().addNote(newNote);
+    }
+
+    Navigator.pop(context);
   }
 
   @override
