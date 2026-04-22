@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/note.dart';
 import 'create_page.dart';
+import 'detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,17 +12,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<Note> _notes = [];
-
-  void _addOrUpdateNote(Note note) {
-    setState(() {
-      final index = _notes.indexWhere((n) => n.id == note.id);
-      if (index != -1) {
-        _notes[index] = note;
-      } else {
-        _notes.add(note);
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,8 +80,23 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      onTap: () {
-                        // TODO: Navigate to detail page
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DetailPage(note: note),
+                          ),
+                        );
+
+                        if (result != null) {
+                          setState(() {
+                            if (result == 'deleted') {
+                              _notes.removeAt(index);
+                            } else if (result is Note) {
+                              _notes[index] = result;
+                            }
+                          });
+                        }
                       },
                     ),
                   ),
@@ -100,12 +105,14 @@ class _HomePageState extends State<HomePage> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final newNote = await Navigator.push<Note>(
+          final result = await Navigator.push<Note>(
             context,
             MaterialPageRoute(builder: (context) => const CreateNotePage()),
           );
-          if (newNote != null) {
-            _addOrUpdateNote(newNote);
+          if (result != null) {
+            setState(() {
+              _notes.add(result);
+            });
           }
         },
         tooltip: 'Nouvelle Note',
